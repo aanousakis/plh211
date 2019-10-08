@@ -10,9 +10,14 @@
     arr1[$1]+=$2;
     arr2[$1]+=$3;
     arr3[$1]+=$4
+
+
+    if (length($1) > tmp)
+        tmp = length($1)
+
    }
    END {
-     for (key in arr1) printf("\t%s\t%s\t%s-%s\n", key, arr1[key], arr2[key], arr3[key])
+     for (key in arr1) printf("\t%-*s\t%3s\t%3s-%-3s\n",tmp, key, arr1[key], arr2[key], arr3[key])
    }'\
 |  sort -k2,2nr -k1,1 \
 |  nl -w2 -s "."
