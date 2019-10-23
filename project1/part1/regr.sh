@@ -4,38 +4,40 @@ calculate(){
     
     # wc -l $1  count lines in file
     # awk '{ print $1 }' : wc return #lines filename. awk filters out filename
-    # wc starts counting from 0, so we add 1
-    length=$(( $(wc -l $1 | awk '{ print $1 }') +1 ))
-    #echo "Lines = $length"
+    # wc starts counting from 0, so we add 1  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+    length=$(( $(wc -l $1 | awk '{ print $1 }') +0 ))
+    echo "Lines = $length"
 
     sum_x=$(awk -F ':' '{s+=$1} END {print s}' $1)
-    #echo "SUM_X = $sum_x"
+    echo "SUM_X = $sum_x"
 
     sum_x2=$(awk -F ':' '{s+=$1*$1} END {print s}' $1)
-    #echo "SUM_X2 = $sum_x2"
+    echo "SUM_X2 = $sum_x2"
 
     sum_y=$(awk -F ':' '{s+=$2} END {print s}' $1)
-    #echo "SUM_Y = $sum_y"
+    echo "SUM_Y = $sum_y"
 
     sum_xy=$(awk -F ':' '{s+=$1*$2} END {print s}' $1)
-    #echo "SUM_XY = $sum_xy"
+    echo "SUM_XY = $sum_xy"
 
     #read w1 w2 w3 w4 <<< $(awk -F ':' '{x+=$1; x2+=$1*$1; y+=$2; xy+=$1*$2} END {print x "\t" x2 "\t" y "\t" xy}' $1)
     #echo "x=$w1 x2=$w2 y=$w3 xy=$w4" 
 
-    a=$( echo "scale=5; ($length * $sum_xy - $sum_x * $sum_y) / ($length * $sum_x2 - $sum_x * $sum_x )" | bc)
+    a=$( echo "scale=2; ($length * $sum_xy - $sum_x * $sum_y) / ($length * $sum_x2 - $sum_x * $sum_x )" | bc)
 
-    b=$( echo "scale=5; ($sum_y - $a * $sum_x) / $length" | bc)
+    b=$( echo "scale=2; ($sum_y - $a * $sum_x) / $length" | bc)
 
     c=1
 
     err=$(awk -F ':' "{s+=(\$2-($a * \$1 + $b))^2 } END {print s}" $1)
+    err2=$( echo "scale=1; $err" | bc)
 
 
 
 
 
-    echo "FILE: $1, a=$a b=$b c=$c err=$err"
+
+    echo "FILE: $1, a=$a b=$b c=$c err=$err2"
     return
 }
 
