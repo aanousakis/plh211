@@ -23,6 +23,17 @@ calculate(){
     #read w1 w2 w3 w4 <<< $(awk -F ':' '{x+=$1; x2+=$1*$1; y+=$2; xy+=$1*$2} END {print x "\t" x2 "\t" y "\t" xy}' $1)
     #echo "x=$w1 x2=$w2 y=$w3 xy=$w4" 
 
+    c=1.00
+
+    denominator=$( echo "scale=2; ($length * $sum_x2 - $sum_x * $sum_x )" | bc )
+    echo $denominator
+
+    if (( $(echo "$denominator == 0" |bc -l) )); then
+        echo "FILE: $1, a=NaN b=NaN c=$c err=NaN" | sed 's/\.00//g'
+        return
+    fi
+
+
     a=$( echo "scale=2; ($length * $sum_xy - $sum_x * $sum_y) / ($length * $sum_x2 - $sum_x * $sum_x )" | bc )
     echo a=$a
 
@@ -30,8 +41,6 @@ calculate(){
     b=$( echo "scale=2; ($sum_y - $a * $sum_x) / $length" | bc)
     echo b=$b
 
-
-    c=1.00
 
 
     err=$(awk -F ':' "{s+=(\$2-($a * \$1 + $b))^2 } END {print s}" $1)
