@@ -23,21 +23,22 @@ calculate(){
     #read w1 w2 w3 w4 <<< $(awk -F ':' '{x+=$1; x2+=$1*$1; y+=$2; xy+=$1*$2} END {print x "\t" x2 "\t" y "\t" xy}' $1)
     #echo "x=$w1 x2=$w2 y=$w3 xy=$w4" 
 
-    a=$( echo "scale=2; ($length * $sum_xy - $sum_x * $sum_y) / ($length * $sum_x2 - $sum_x * $sum_x )" | bc)
+    a=$( echo "scale=2; ($length * $sum_xy - $sum_x * $sum_y) / ($length * $sum_x2 - $sum_x * $sum_x )" | bc )
+    echo a=$a
+
 
     b=$( echo "scale=2; ($sum_y - $a * $sum_x) / $length" | bc)
+    echo b=$b
+
 
     c=1
 
+
     err=$(awk -F ':' "{s+=(\$2-($a * \$1 + $b))^2 } END {print s}" $1)
-    err2=$( echo "scale=1; $err" | bc)
+    err=$( echo "scale=2; $err/1" | bc)
 
 
-
-
-
-
-    echo "FILE: $1, a=$a b=$b c=$c err=$err2"
+    echo "FILE: $1, a=$a b=$b c=$c err=$err" | sed 's/=\./=0./g' 
     return
 }
 
