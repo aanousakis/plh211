@@ -6,19 +6,19 @@ calculate(){
     # awk '{ print $1 }' : wc return #lines filename. awk filters out filename
     # wc starts counting from 0, so we add 1  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     length=$(( $(wc -l $1 | awk '{ print $1 }') +0 ))
-    echo "Lines = $length"
+    #echo "Lines = $length"
 
     sum_x=$(awk -F ':' '{s+=$1} END {print s}' $1)
-    echo "SUM_X = $sum_x"
+    #echo "SUM_X = $sum_x"
 
     sum_x2=$(awk -F ':' '{s+=$1*$1} END {print s}' $1)
-    echo "SUM_X2 = $sum_x2"
+    #echo "SUM_X2 = $sum_x2"
 
     sum_y=$(awk -F ':' '{s+=$2} END {print s}' $1)
-    echo "SUM_Y = $sum_y"
+    #echo "SUM_Y = $sum_y"
 
     sum_xy=$(awk -F ':' '{s+=$1*$2} END {print s}' $1)
-    echo "SUM_XY = $sum_xy"
+    #echo "SUM_XY = $sum_xy"
 
     #read w1 w2 w3 w4 <<< $(awk -F ':' '{x+=$1; x2+=$1*$1; y+=$2; xy+=$1*$2} END {print x "\t" x2 "\t" y "\t" xy}' $1)
     #echo "x=$w1 x2=$w2 y=$w3 xy=$w4" 
@@ -26,7 +26,7 @@ calculate(){
     c=1.00
 
     denominator=$( echo "scale=2; ($length * $sum_x2 - $sum_x * $sum_x )" | bc )
-    echo $denominator
+    #echo $denominator
 
     if (( $(echo "$denominator == 0" |bc -l) )); then
         echo "FILE: $1, a=NaN b=NaN c=$c err=NaN" | sed 's/\.00//g'
@@ -35,11 +35,11 @@ calculate(){
 
 
     a=$( echo "scale=2; ($length * $sum_xy - $sum_x * $sum_y) / ($length * $sum_x2 - $sum_x * $sum_x )" | bc )
-    echo a=$a
+    #echo a=$a
 
 
     b=$( echo "scale=2; ($sum_y - $a * $sum_x) / $length" | bc)
-    echo b=$b
+    #echo b=$b
 
 
 
