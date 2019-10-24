@@ -4,7 +4,6 @@ calculate(){
     
     # wc -l $1  count lines in file
     # awk '{ print $1 }' : wc return #lines filename. awk filters out filename
-    # wc starts counting from 0, so we add 1  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
     length=$(( $(wc -l $1 | awk '{ print $1 }') +0 ))
     #echo "Lines = $length"
 
@@ -47,7 +46,7 @@ calculate(){
     err=$( echo "scale=2; $err/1" | bc)
 
 
-    echo "FILE: $1, a=$a b=$b c=$c err=$err" | sed 's/=\./=0./g' | sed 's/\.00//g'
+    echo "FILE: $1, a=$a b=$b c=$c err=$err" | sed 's/=\./=0./g' |  sed 's/=-\./=-0./g' | sed 's/\.00//g'
     return
 }
 
