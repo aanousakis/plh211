@@ -1,8 +1,18 @@
 import logging
+import re
+###################################
+
+import resource
+import os
+
+
+
+
+#####################################
 
 logging.basicConfig(level=logging.DEBUG)
 
-msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program)"
+msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
 
 
 # logging.debug('This is a debug message')
@@ -10,6 +20,42 @@ msg = "Give your preference: (1: read new input file, 2: print statistics for a 
 # logging.warning('This is a warning message')
 # logging.error('This is an error message')
 # logging.critical('This is a critical message')
+
+# anoigoume to arxeio kai kaloume ti sunartisi readReceipt gia na diabasei mia mia tis apodeixeis
+def readInputFile():
+    logging.debug('Read new input file')
+
+    #diabazoume to onoma tou arxeiou kai elegxoume an einai keno
+    try:
+        file_name = input("Enter filename : ")
+
+        logging.debug('File Size is %s MB', os.stat(file_name).st_size / (1024 * 1024))
+
+        with open(file_name,'r',encoding='utf8') as inputFile:
+            readReceipt(inputFile)
+            for line in inputFile:
+                # process the line
+                    print("zzz" + line)
+
+
+    except EOFError:  # an uparxei kapoio problima me to onoma tou arxeiou
+        logging.warning('EOFError while reading filename')
+    except IOError as e:  # an uparxei kapoio problima me to anoigma tou arxeiou
+        logging.warning('%s while reading input file', type(e))
+
+# diabazei grammi grammi kai elegxei an exei ti sosti domi i apodeixi    
+def readReceipt(inputFile):
+    for line in inputFile:
+        print("qqq" + line)
+
+
+        pattern = '^--*-$'
+        result = re.match(pattern, line)
+
+        print(result)
+
+        
+            
 
 
 
@@ -33,7 +79,7 @@ while True:
     logging.debug('Input = %s', choice)
 
     if choice == 1:
-        pass
+        readInputFile()
     elif choice ==2:
         pass
     elif choice ==3:
@@ -41,3 +87,11 @@ while True:
     else:
         logging.debug('Exiting')
         break
+
+
+
+
+
+    print('Peak Memory Usage =', resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    print('User Mode Time =', resource.getrusage(resource.RUSAGE_SELF).ru_utime)
+    print('System Mode Time =', resource.getrusage(resource.RUSAGE_SELF).ru_stime)
