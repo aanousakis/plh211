@@ -32,10 +32,22 @@ def readInputFile():
         logging.debug('File Size is %s MB', os.stat(file_name).st_size / (1024 * 1024))
 
         with open(file_name,'r',encoding='utf8') as inputFile:
-            readReceipt(inputFile)
             for line in inputFile:
                 # process the line
-                    print("zzz" + line)
+
+                pattern = '(^--*-$)'
+                result = re.match(pattern, line)
+                print(result)
+
+                if result:  # an brike tin arxi mias apodeixis kalei ti readReceipt()
+                    logging.debug('Receipt beginning found')
+                    readReceipt(inputFile)
+                else:       # an oxi, diabazei tin epomeni grammi mexri na ti brei
+                    continue        
+
+
+
+                print("zzz" + line)
 
 
     except EOFError:  # an uparxei kapoio problima me to onoma tou arxeiou
@@ -45,6 +57,52 @@ def readInputFile():
 
 # diabazei grammi grammi kai elegxei an exei ti sosti domi i apodeixi    
 def readReceipt(inputFile):
+
+    logging.debug('Parsing receipt')
+
+    line = inputFile.readline().upper()
+
+    pattern = '^ΑΦΜ:\s*(\d{10})\s*$'
+    result = re.match(pattern, line)
+
+    if result: #elegxos an to afm einai sosto
+        afm = int(result.group(1))
+        print ("AFM =[" + str(afm) + "]")
+    else:
+        logging.debug('AFM parsing error in line %s', line)
+
+
+    line = inputFile.readline().upper()
+
+
+#\d+|\d+\.\d+
+
+
+    pattern = '(^.*):\s*(\d+)\s+(\d+|\d+\.\d+)\s+(\d+|\d+\.\d+)\s+$'
+    result = re.match(pattern, line)
+
+    if result:
+        product  = result.group(1)
+        quantity = int(result.group(2))
+        price    = float(result.group(3))
+        final    = float(result.group(4))
+
+        print(result)
+        logging.debug('Product:%s Quantity:%s Price:%s Final:%s', product, quantity, price, final)
+    
+    else:
+        logging.debug('Product parsing error in line %s', line)
+
+
+
+
+    logging.debug('Receipt parsing finished')
+
+
+
+
+""" 
+    
     for line in inputFile:
         print("qqq" + line)
 
@@ -52,9 +110,11 @@ def readReceipt(inputFile):
         pattern = '^--*-$'
         result = re.match(pattern, line)
 
+
+
         print(result)
 
-        
+         """
             
 
 
