@@ -10,6 +10,9 @@ import os
 
 #####################################
 
+class PARSEError(Exception):
+   pass
+
 logging.basicConfig(level=logging.DEBUG)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
@@ -60,62 +63,65 @@ def readReceipt(inputFile):
 
     logging.debug('Parsing receipt')
 
+    try:
+        #parse AFM
+        parseAfm(inputFile)
+
+        #parse product
+        parseProduct(inputFile)
+    except PARSEError as e:
+        logging.debug("%s", e)
+
+
+    logging.debug('Receipt parsing finished')
+
+def parseAfm(inputFile):
     line = inputFile.readline().upper()
 
     pattern = '^ΑΦΜ:\s*(\d{10})\s*$'
     result = re.match(pattern, line)
 
-    if result: #elegxos an to afm einai sosto
+    if result: #elegxos an to afm exei ti sosti morfi
         afm = int(result.group(1))
         print ("AFM =[" + str(afm) + "]")
     else:
-        logging.debug('AFM parsing error in line %s', line)
+        raise PARSEError("Error in AFM declaration in line : " + line)
 
-
+def parseProduct(inputFile):
     line = inputFile.readline().upper()
 
+    while line:
 
-#\d+|\d+\.\d+
-
-
-    pattern = '(^.*):\s*(\d+)\s+(\d+|\d+\.\d+)\s+(\d+|\d+\.\d+)\s+$'
-    result = re.match(pattern, line)
-
-    if result:
-        product  = result.group(1)
-        quantity = int(result.group(2))
-        price    = float(result.group(3))
-        final    = float(result.group(4))
-
-        print(result)
-        logging.debug('Product:%s Quantity:%s Price:%s Final:%s', product, quantity, price, final)
-    
-    else:
-        logging.debug('Product parsing error in line %s', line)
-
-
-
-
-    logging.debug('Receipt parsing finished')
-
-
-
-
-""" 
-    
-    for line in inputFile:
-        print("qqq" + line)
-
-
-        pattern = '^--*-$'
+        pattern = '(^.*):\s*(\d+)\s+(\d+|\d+\.\d+)\s+(\d+|\d+\.\d+)\s+$'
         result = re.match(pattern, line)
 
+        if result: # elegxos an to proion exei ti  sosti morfi
+            product  = result.group(1)
+            quantity = int(result.group(2))
+            price    = float(result.group(3))
+            final    = float(result.group(4))
 
+            print(result)
+            logging.debug('Product:%s Quantity:%s Price:%s Final:%s', product, quantity, price, final)
 
-        print(result)
+            if final == quantity * price:
+                pass
+            else:
+                logging.debug('Product numerical error. final != quantity * price in line %s', line)
+    
+        else:
+            #elegxos an eftase to telos tis apodeixis
+            pattern = '^ΣΥΝΟΛΟ\s*(\d+|\d+\.\d+)\s+$'
+            result = re.match(pattern, line)
 
-         """
-            
+            if result:
+                pass
+            else:
+                logging.debug('Product parsing error in line %s', line)
+
+        line = inputFile.readline().upper()
+    #while end
+
 
 
 
