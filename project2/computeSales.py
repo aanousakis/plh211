@@ -18,12 +18,16 @@ class PARSEError(Exception):
 class EOF(Exception):
    pass
 
+class list_item:
+    def __init__(self, productName, total):
+        self.productName = productName
+        self.total   = total
 
 
 logging.basicConfig(level=logging.DEBUG)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
-
+Dict = { }
 
 # logging.debug('This is a debug message')
 # logging.info('This is an info message')
@@ -37,10 +41,20 @@ def searchForReceiptStart(inputFile):
         result = re.match(pattern, line)
 
         if result:  # an brike tin arxi tis apodeixis termatizei
-            logging.debug('Receipt beginning found')
-            break
+            #logging.debug('Receipt beginning found')
+            return
         else: # an oxi, diabazei tin epomeni grammi mexri na ti brei
+            logging.debug('Ignoring line : %s', line)
             continue
+    logging.debug("Receipt beginning not found") 
+    raise EOF("Reached end of file")
+
+def saveData(afm, productList, total):
+    logging.debug("Saving data")
+
+    for product in productList:
+        print(product.productName)
+
 
 # anoigoume to arxeio kai kaloume ti sunartisi readReceipt gia na diabasei mia mia tis apodeixeis
 def readInputFile():
@@ -59,11 +73,16 @@ def readInputFile():
 
             while True:
                 try:
-                    readReceipt(inputFile)
+                    afm, productList, total = readReceipt(inputFile)
                 except PARSEError as e:
-                    print("yyy error yyy")
-                else:
-                    logging.debug("data correct")
+                    logging.debug("Invalid receipt")
+                else:# an i apodeixi einai sosti apothikeuoyme ta dedomena tis
+                    logging.debug("Valid receipt")
+                    print(int(afm))
+
+                    saveData(afm, productList, total)
+
+
                 finally:
                     pass
 
@@ -83,10 +102,10 @@ def readReceipt(inputFile):
 
     try:
         #parse AFM
-        parseAfm(inputFile)
+        afm = parseAfm(inputFile)
 
         #parse product kai to sunolo
-        parseProduct(inputFile)
+        productList, total = parseProduct(inputFile)
 
         #parse delimiter "------"
         parseDelimiter(inputFile)
@@ -94,19 +113,18 @@ def readReceipt(inputFile):
     except PARSEError as e:
         logging.debug("%s", e)
 
-        #otan broume ena sfalma, diabazoume mexri na broume tin arxi tis epomenis apodeixis
-        searchForReceiptStart(inputFile)   
-
+        searchForReceiptStart(inputFile) #otan broume ena sfalma, diabazoume mexri na broume tin arxi tis epomenis apodeixis
         raise PARSEError("Receipt parsing failed")
-
+        
     else: #an den uparxei kapoio sfalma
         logging.debug('Receipt parsing finished')
+        return afm, productList, total
 
 def parseAfm(inputFile):
     line = inputFile.readline().upper()
 
     if line:
-        print("not empty")
+        pass
     else:
         print("empty")       
         raise EOF("Reached end of file")
@@ -116,13 +134,16 @@ def parseAfm(inputFile):
 
     if result: #elegxos an to afm exei ti sosti morfi
         afm = int(result.group(1))
-        print ("AFM =[" + str(afm) + "]")
+        logging.debug("AFM =[%s]", str(afm))
+        return afm
     else:
         raise PARSEError("Error in AFM declaration in line : " + line)
 
 def parseProduct(inputFile):
 
     line = inputFile.readline().upper()
+    productsNum = 0
+    productList = []
 
     while line:
         pattern = '(^.*):\s*(\d+)\s+(\d+|\d+\.\d+)\s+(\d+|\d+\.\d+)\s+$'
@@ -134,11 +155,14 @@ def parseProduct(inputFile):
             price    = float(result.group(3))
             final    = float(result.group(4))
 
-            print(result)
             logging.debug('Product:%s Quantity:%s Price:%s Final:%s', product, quantity, price, final)
 
-            if final == quantity * price:
-                pass
+            if final == quantity * price: # an to proion einai sosto
+                productsNum += 1
+
+                #prosthiki sti lista
+                new_product = list_item(product, final)
+                productList.append(new_product)
             else:
                 logging.debug('Product numerical error. final != quantity * price in line %s', line)
     
@@ -147,10 +171,11 @@ def parseProduct(inputFile):
             pattern = '^ΣΥΝΟΛΟ:\s*(\d+|\d+\.\d+)\s*$'
             result = re.match(pattern, line)
 
-            if result:
+            if result and (productsNum > 0):  #an einai ola sosta
                 total = float(result.group(1))
                 logging.debug('Total : [%s]', total)
-                break
+
+                return productList, total
             
             #elegxos an eftase sto telos tis apodeixis "---"
             pattern = '^-+\s*$'
