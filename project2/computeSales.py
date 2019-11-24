@@ -10,8 +10,15 @@ import os
 
 #####################################
 
+#an uparxei kapoio sfalma sta dedomena tou arxeiou
 class PARSEError(Exception):
    pass
+
+#otan ftasei sto telos tou arxeiou
+class EOF(Exception):
+   pass
+
+
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -38,7 +45,7 @@ def readInputFile():
             for line in inputFile:
                 # process the line
 
-                pattern = '(^--*-$)'
+                pattern = '^-+\s*$'
                 result = re.match(pattern, line)
                 print(result)
 
@@ -57,11 +64,13 @@ def readInputFile():
         logging.warning('EOFError while reading filename')
     except IOError as e:  # an uparxei kapoio problima me to anoigma tou arxeiou
         logging.warning('%s while reading input file', type(e))
+    except EOF as e:
+        logging.debug("%s", e)
 
 # diabazei grammi grammi kai elegxei an exei ti sosti domi i apodeixi    
 def readReceipt(inputFile):
 
-    logging.debug('Parsing receipt')
+    logging.debug('Receipt parsing started')
 
     try:
         #parse AFM
@@ -72,11 +81,17 @@ def readReceipt(inputFile):
     except PARSEError as e:
         logging.debug("%s", e)
 
-
-    logging.debug('Receipt parsing finished')
+    else: #an den uparxei kapoio sfalma
+        logging.debug('Receipt parsing finished')
 
 def parseAfm(inputFile):
     line = inputFile.readline().upper()
+
+    if line:
+        print("not empty")
+    else:
+        print("empty")       
+        raise EOF("Reached end of file")
 
     pattern = '^ΑΦΜ:\s*(\d{10})\s*$'
     result = re.match(pattern, line)
@@ -88,10 +103,10 @@ def parseAfm(inputFile):
         raise PARSEError("Error in AFM declaration in line : " + line)
 
 def parseProduct(inputFile):
+
     line = inputFile.readline().upper()
 
     while line:
-
         pattern = '(^.*):\s*(\d+)\s+(\d+|\d+\.\d+)\s+(\d+|\d+\.\d+)\s+$'
         result = re.match(pattern, line)
 
@@ -109,22 +124,32 @@ def parseProduct(inputFile):
             else:
                 logging.debug('Product numerical error. final != quantity * price in line %s', line)
     
-        else:
-            #elegxos an eftase to telos tis apodeixis
-            pattern = '^ΣΥΝΟΛΟ\s*(\d+|\d+\.\d+)\s+$'
+        else:   # an den einai sosto proion
+            #elegxos an eftase sto SUNOLO
+            pattern = '^ΣΥΝΟΛΟ:\s*(\d+|\d+\.\d+)\s*$'
             result = re.match(pattern, line)
 
             if result:
-                pass
-            else:
-                logging.debug('Product parsing error in line %s', line)
+                total = float(result.group(1))
+                logging.debug('Total : [%s]', total)
+                break
+            
+            #elegxos an eftase sto telos tis apodeixis "---"
+            pattern = '^-+\s*$'
+            result = re.match(pattern, line)
+
+            if result:  # an ftasei edo tote yparxei kapoio sfalma, leipei to sunolo
+                raise PARSEError("Error Total is missing in line : " + line)
+                
+          
+            #an ftasei edo, tote einai lanthasmeno proion
+            raise PARSEError("Product parsing error in line : " + line)
 
         line = inputFile.readline().upper()
     #while end
 
 
-
-
+#****************************************************************************
 
 while True:
     
