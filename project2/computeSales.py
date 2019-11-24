@@ -31,6 +31,17 @@ msg = "Give your preference: (1: read new input file, 2: print statistics for a 
 # logging.error('This is an error message')
 # logging.critical('This is a critical message')
 
+def searchForReceiptStart(inputFile):
+    for line in inputFile:
+        pattern = '^-+\s*$'
+        result = re.match(pattern, line)
+
+        if result:  # an brike tin arxi tis apodeixis termatizei
+            logging.debug('Receipt beginning found')
+            break
+        else: # an oxi, diabazei tin epomeni grammi mexri na ti brei
+            continue
+
 # anoigoume to arxeio kai kaloume ti sunartisi readReceipt gia na diabasei mia mia tis apodeixeis
 def readInputFile():
     logging.debug('Read new input file')
@@ -42,25 +53,23 @@ def readInputFile():
         logging.debug('File Size is %s MB', os.stat(file_name).st_size / (1024 * 1024))
 
         with open(file_name,'r',encoding='utf8') as inputFile:
-            for line in inputFile:
-                # process the line
+            
+            #psaxnoume na broume tin arxi tis protis apodeixis
+            searchForReceiptStart(inputFile)     
 
-                pattern = '^-+\s*$'
-                result = re.match(pattern, line)
-                print(result)
-
-                if result:  # an brike tin arxi mias apodeixis kalei ti readReceipt()
-                    logging.debug('Receipt beginning found')
+            while True:
+                try:
                     readReceipt(inputFile)
-                else:       # an oxi, diabazei tin epomeni grammi mexri na ti brei
-                    continue        
+                except PARSEError as e:
+                    print("yyy error yyy")
+                else:
+                    logging.debug("data correct")
+                finally:
+                    pass
 
 
 
-                print("zzz" + line)
-
-
-    except EOFError:  # an uparxei kapoio problima me to onoma tou arxeiou
+    except EOFError:  # an uparxei kapoio problima me to onoma tou arxeiou (an einai keno)
         logging.warning('EOFError while reading filename')
     except IOError as e:  # an uparxei kapoio problima me to anoigma tou arxeiou
         logging.warning('%s while reading input file', type(e))
@@ -76,10 +85,19 @@ def readReceipt(inputFile):
         #parse AFM
         parseAfm(inputFile)
 
-        #parse product
+        #parse product kai to sunolo
         parseProduct(inputFile)
+
+        #parse delimiter "------"
+        parseDelimiter(inputFile)
+
     except PARSEError as e:
         logging.debug("%s", e)
+
+        #otan broume ena sfalma, diabazoume mexri na broume tin arxi tis epomenis apodeixis
+        searchForReceiptStart(inputFile)   
+
+        raise PARSEError("Receipt parsing failed")
 
     else: #an den uparxei kapoio sfalma
         logging.debug('Receipt parsing finished')
@@ -148,6 +166,16 @@ def parseProduct(inputFile):
         line = inputFile.readline().upper()
     #while end
 
+def parseDelimiter(inputFile):
+    line = inputFile.readline().upper()
+
+    pattern = '^-+\s*$'
+    result = re.match(pattern, line)
+
+    if result: 
+        pass
+    else:
+        raise PARSEError("Error. Expected delimiter in line : " + line)
 
 #****************************************************************************
 
