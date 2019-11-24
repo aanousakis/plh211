@@ -23,8 +23,8 @@ class list_item:
         self.productName = productName
         self.total   = total
 
-
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.CRITICAL)
+#logging.basicConfig(level=logging.DEBUG)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
 Dict = { }
@@ -49,11 +49,23 @@ def searchForReceiptStart(inputFile):
     logging.debug("Receipt beginning not found") 
     raise EOF("Reached end of file")
 
+# gia kathe proion prosthetei sto lexiko to afm kai to sunolo tou proiontos
+# an to proion uparxei idi kai uparxei to idio afm tote auxanei to sunolo tou
 def saveData(afm, productList, total):
     logging.debug("Saving data")
 
     for product in productList:
-        print(product.productName)
+
+        #an den uparxei to proion tote i get epistrefei -1
+        #an den uparxei to afm    tote i get epistrefei  0
+        if not product.productName in Dict:    #an den uparxei auto to proion sto lexiko
+            Dict[product.productName] = {}
+            Dict[product.productName][afm] = product.total
+        else:
+            Dict[product.productName][afm] = Dict.get(product.productName).get(afm, 0) + product.total
+
+
+    
 
 
 # anoigoume to arxeio kai kaloume ti sunartisi readReceipt gia na diabasei mia mia tis apodeixeis
@@ -78,8 +90,7 @@ def readInputFile():
                     logging.debug("Invalid receipt")
                 else:# an i apodeixi einai sosti apothikeuoyme ta dedomena tis
                     logging.debug("Valid receipt")
-                    print(int(afm))
-
+                   
                     saveData(afm, productList, total)
 
 
@@ -125,8 +136,7 @@ def parseAfm(inputFile):
 
     if line:
         pass
-    else:
-        print("empty")       
+    else:      
         raise EOF("Reached end of file")
 
     pattern = '^ΑΦΜ:\s*(\d{10})\s*$'
@@ -204,6 +214,20 @@ def parseDelimiter(inputFile):
 
 #****************************************************************************
 
+def productStats():
+    logging.debug("Printing product Statistics")
+
+    try:
+        productName = input("Enter product name : ")
+    except EOFError:
+        logging.debug("Empty product name")
+    else:
+        print(Dict[productName])
+    
+
+
+
+
 while True:
     
     # diabazoume tin epilogi tou xristi kai elegxoume oti exei sosti timi
@@ -225,7 +249,7 @@ while True:
     if choice == 1:
         readInputFile()
     elif choice ==2:
-        pass
+        productStats()
     elif choice ==3:
         pass
     else:
