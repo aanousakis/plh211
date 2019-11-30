@@ -1,8 +1,8 @@
 import random
 
-random_products = 20
-random_afm_cnt = 1000
-receipt_cnt = 100000
+random_products = 100000000
+random_afm_cnt = 10000
+receipt_cnt = 1
 
 product = ['ΤΖΑΤΖΙΚΙ', 'ΜΠΡΙΖΟΛΑ ΜΟΣΧΑΡΙΣΙΑ', 'AMSTEL', 'ΠΟΙΚΙΛΙΑ']
 

@@ -4,6 +4,9 @@ import re
 
 import resource
 import os
+import sys
+import time
+import timeit
 
 
 
@@ -23,7 +26,7 @@ class list_item:
         self.productName = productName
         self.total   = total
 
-logging.basicConfig(level=logging.CRITICAL)
+logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
@@ -134,9 +137,7 @@ def readReceipt(inputFile):
 def parseAfm(inputFile):
     line = inputFile.readline().upper()
 
-    if line:
-        pass
-    else:      
+    if not line:     
         raise EOF("Reached end of file")
 
     pattern = '^ΑΦΜ:\s*(\d{10})\s*$'
@@ -211,9 +212,7 @@ def parseDelimiter(inputFile):
         pass
     else:
         raise PARSEError("Error. Expected delimiter in line : " + line)
-
-#****************************************************************************
-
+#@profile
 def productStats():
     logging.debug("Printing product Statistics")
 
@@ -226,40 +225,44 @@ def productStats():
     
 
 
+#main
+#****************************************************************************
+if __name__ == '__main__':
+
+    while True:
+        
+        # diabazoume tin epilogi tou xristi kai elegxoume oti exei sosti timi
+        try:
+            choice = int( input(msg))
+            if (choice < 0) or (choice > 4):
+                raise ValueError
+
+        except EOFError as e: #an o xristis den epilexei tpt
+            logging.warning('EOFError exception')
+            continue
+        except ValueError as e: #an o xristis den epilexei akaireo
+            logging.warning('ValueError exception')
+            continue
 
 
-while True:
-    
-    # diabazoume tin epilogi tou xristi kai elegxoume oti exei sosti timi
-    try:
-        choice = int( input(msg))
-        if (choice < 0) or (choice > 4):
-            raise ValueError
+        logging.debug('Input = %s', choice)
 
-    except EOFError as e: #an o xristis den epilexei tpt
-        logging.warning('EOFError exception')
-        continue
-    except ValueError as e: #an o xristis den epilexei akaireo
-        logging.warning('ValueError exception')
-        continue
+        if choice == 1:
+            start_time = timeit.default_timer()
+            readInputFile()
+        elif choice ==2:
+            start_time = timeit.default_timer()
+            productStats()
+        elif choice ==3:
+            start_time = timeit.default_timer()
+            pass
+        else:
+            logging.debug('Exiting')
+            break
+        
+        logging.info("Executed in %s seconds.", timeit.default_timer() - start_time)
 
+    kilobytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss # peak memory usage (bytes on OS X, kilobytes on Linux)
+    megabytes = kilobytes / 1024
 
-    logging.debug('Input = %s', choice)
-
-    if choice == 1:
-        readInputFile()
-    elif choice ==2:
-        productStats()
-    elif choice ==3:
-        pass
-    else:
-        logging.debug('Exiting')
-        break
-
-
-
-
-
-    print('Peak Memory Usage =', resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
-    print('User Mode Time =', resource.getrusage(resource.RUSAGE_SELF).ru_utime)
-    print('System Mode Time =', resource.getrusage(resource.RUSAGE_SELF).ru_stime)
+    logging.info("Max memory usage : %s MB", megabytes)
