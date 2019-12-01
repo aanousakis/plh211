@@ -32,7 +32,8 @@ logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
-Dict = { }
+productDict = { }
+afmDict     = { }
 
 epsilon= np.finfo(float).eps
 
@@ -62,24 +63,24 @@ def searchForReceiptStart(inputFile):
 def saveData(afm, productList, total):
     logging.debug("Saving data")
 
+    if  not afm in afmDict.keys():
+        afmDict[afm] = {}
+        afm_exist = False
+    else:
+        afm_exist = True
+
     for product_name, product_total in productList.items() :
-        if not product_name in Dict:    #an den uparxei auto to proion sto lexiko
-            Dict[product_name] = {}
-            Dict[product_name][afm] = product_total
+        if not product_name in productDict.keys():    #an den uparxei auto to proion sto lexiko
+            productDict[product_name] = {}
+            productDict[product_name][afm] = product_total
         else:
-            Dict[product_name][afm] = Dict.get(product_name).get(afm, 0) + product_total
+            #an den uparxei to afm    tote i get epistrefei  0
+            productDict[product_name][afm] = productDict.get(product_name).get(afm, 0) + product_total
+
+        afmDict[afm][product_name] = afmDict.get(afm).get(product_name, 0) + product_total
 
 
-    """ for product in productList:
 
-        #an den uparxei to proion tote i get epistrefei -1
-        #an den uparxei to afm    tote i get epistrefei  0
-        if not product.productName in Dict:    #an den uparxei auto to proion sto lexiko
-            Dict[product.productName] = {}
-            Dict[product.productName][afm] = product.total
-        else:
-            Dict[product.productName][afm] = Dict.get(product.productName).get(afm, 0) + product.total
- """
 
 def insertData(product_name, afm, total):
     pass
@@ -274,12 +275,25 @@ def productStats():
     except EOFError:
         logging.debug("Empty product name")
     else:
-        if productName in Dict:# an to proion uparxei sto lexiko
-            for element in sorted(Dict[productName].items()):#taxinomoume ta kleidia tou lexikou kai emfanizoume tis times tous
+        if productName in productDict:# an to proion uparxei sto lexiko
+            for element in sorted(productDict[productName].items()):#taxinomoume ta kleidia tou lexikou kai emfanizoume tis times tous
                  #print(element[0], element[1] )
 
                  print("{:010d}".format(element[0]), "{:.2f}".format(element[1]))
 
+def salesStats():
+    logging.debug("Printing sales Statistics")
+
+    try:
+        afm = int(input("Enter afm : "))
+    except EOFError:
+        logging.debug("Empty product name")
+    except ValueError:
+        logging.debug("Value error")
+    else:
+        if afm in afmDict.keys():
+            for element in sorted(afmDict[afm].items()):
+                print(element[0], "{:.2f}".format(element[1]))
 
 
 #main
@@ -308,7 +322,7 @@ if __name__ == '__main__':
             elif choice ==2:
                 productStats()
             elif choice ==3:
-                pass
+                salesStats()
             else:
                 logging.debug('Exiting')
                 break
