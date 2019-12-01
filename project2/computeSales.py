@@ -62,7 +62,15 @@ def searchForReceiptStart(inputFile):
 def saveData(afm, productList, total):
     logging.debug("Saving data")
 
-    for product in productList:
+    for product_name, product_total in productList.items() :
+        if not product_name in Dict:    #an den uparxei auto to proion sto lexiko
+            Dict[product_name] = {}
+            Dict[product_name][afm] = product_total
+        else:
+            Dict[product_name][afm] = Dict.get(product_name).get(afm, 0) + product_total
+
+
+    """ for product in productList:
 
         #an den uparxei to proion tote i get epistrefei -1
         #an den uparxei to afm    tote i get epistrefei  0
@@ -71,7 +79,7 @@ def saveData(afm, productList, total):
             Dict[product.productName][afm] = product.total
         else:
             Dict[product.productName][afm] = Dict.get(product.productName).get(afm, 0) + product.total
-
+ """
 
 def insertData(product_name, afm, total):
     pass
@@ -105,7 +113,7 @@ def readInputFile():
                 else:# an i apodeixi einai sosti apothikeuoyme ta dedomena tis
                     receiptsNum += 1
                     logging.debug("Valid receipt")
-                    #saveData(afm, productList, total)
+                    saveData(afm, productList, total)
                 finally:
                     pass
     except EOFError:  # an uparxei kapoio problima me to onoma tou arxeiou (an einai keno)
@@ -262,12 +270,16 @@ def productStats():
     logging.debug("Printing product Statistics")
 
     try:
-        productName = input("Enter product name : ").upper
+        productName = input("Enter product name : ").upper()
     except EOFError:
         logging.debug("Empty product name")
     else:
-        print(Dict[productName])
-    
+        if productName in Dict:# an to proion uparxei sto lexiko
+            for element in sorted(Dict[productName].items()):#taxinomoume ta kleidia tou lexikou kai emfanizoume tis times tous
+                 #print(element[0], element[1] )
+
+                 print("{:010d}".format(element[0]), "{:.2f}".format(element[1]))
+
 
 
 #main
