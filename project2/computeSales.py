@@ -28,9 +28,8 @@ class list_item:
     def __init__(self, productName, total):
         self.productName = productName
         self.total   = total
-
-#logging.basicConfig(level=logging.INFO)
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.DEBUG)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
 Dict = { }
@@ -45,12 +44,12 @@ epsilon= np.finfo(float).eps
 
 def searchForReceiptStart(inputFile):
     for line in inputFile:
-        #pattern = '^-+\s*$'
-        #result = re.match(pattern, line)
+        pattern = '^-+$'
+        result = re.match(pattern, line)
 
 
-        if line == ('-' * (len(line) -1 ) + '\n'):  # an brike tin arxi tis apodeixis termatizei
-            #logging.debug('Receipt beginning found')
+        if result:  # an brike tin arxi tis apodeixis termatizei
+            logging.debug('Receipt beginning found')
             return
         else: # an oxi, diabazei tin epomeni grammi mexri na ti brei
             logging.debug('Ignoring line : %s', line)
@@ -74,16 +73,22 @@ def saveData(afm, productList, total):
             Dict[product.productName][afm] = Dict.get(product.productName).get(afm, 0) + product.total
 
 
-    
+def insertData(product_name, afm, total):
+    pass
 
 
 # anoigoume to arxeio kai kaloume ti sunartisi readReceipt gia na diabasei mia mia tis apodeixeis
 def readInputFile():
     logging.debug('Read new input file')
 
+    receiptsNum =0
+    error = 0
+
     #diabazoume to onoma tou arxeiou kai elegxoume an einai keno
     try:
         file_name = input("Enter filename : ")
+
+        start_time = timeit.default_timer()
 
         with open(file_name,'r',encoding='utf8') as inputFile:
             logging.debug('File Size is %s MB', os.stat(file_name).st_size / (1024 * 1024))
@@ -96,21 +101,24 @@ def readInputFile():
                     afm, productList, total = readReceipt(inputFile)
                 except PARSEError as e:
                     logging.debug("Invalid receipt")
+                    error +=1
                 else:# an i apodeixi einai sosti apothikeuoyme ta dedomena tis
+                    receiptsNum += 1
                     logging.debug("Valid receipt")
-                    saveData(afm, productList, total)
+                    #saveData(afm, productList, total)
                 finally:
                     pass
     except EOFError:  # an uparxei kapoio problima me to onoma tou arxeiou (an einai keno)
         logging.warning('EOFError while reading filename')
     except IOError as e:  # an uparxei kapoio problima me to anoigma tou arxeiou
         logging.warning('%s while reading input file', type(e))
-    except EOF as e:  # an ftasouse sto telos tou arxeiou kai den broume auto pou psaxnoume
+    except EOF as e:  # an ftasouse sto telos tou arxeiou   termatizei to loop
         logging.debug("%s", e)
+        logging.info("Parsed %d correct and %d incorrect receipts", receiptsNum, error)
+        logging.info("Executed in %s seconds.", timeit.default_timer() - start_time)
 
 # diabazei grammi grammi kai elegxei an exei ti sosti domi i apodeixi    
 def readReceipt(inputFile):
-
     logging.debug('Receipt parsing started')
 
     try:
@@ -157,7 +165,7 @@ def parseProduct(inputFile):
 
     line = inputFile.readline().upper()
     productsNum = 0
-    productList = []
+    productList = {}  
     products_total = 0
 
     if not line:
@@ -179,13 +187,19 @@ def parseProduct(inputFile):
 
             logging.debug('Product:%s Quantity:%s Price:%s Final:%s', product_name, quantity, price, total)
 
-            if total == quantity * price: # an to proion einai sosto
+            if isEqual(total, quantity * price):# an to proion einai sosto
                 productsNum += 1
                 products_total += total
 
                 #prosthiki sti lista
                 new_product = list_item(product_name, total)
-                productList.append(new_product)
+
+                if product_name in productList.keys(): # an uparxei to proion, enimerose tin timi tou
+                    productList[product_name] += total
+                else:# an den uparxei prosthese to proion sto lexiko
+                    productList[product_name] = total
+
+
             else:
                 logging.debug('Product numerical error. total != quantity * price in line %s', line)
     
@@ -207,13 +221,13 @@ def parseProduct(inputFile):
                     logging.info("Parsed %d correct products, products total %f", productsNum, products_total)  
                     return productList, total # an ftasei edo tote i apodeixi einai sosti kai i sunartisi epistrefei
                 else:
-                    raise PARSEError("Total numerical error in line : " + line)
+                    raise PARSEError("Numerical error or zero products in line : " + line)
             
             #elegxos an eftase sto telos tis apodeixis "---"
-            #pattern = '^-+\s*$'
-            #result = re.match(pattern, line)
+            pattern = '^-+$'
+            result = re.match(pattern, line)
             
-            if line == ('-' * (len(line) -1 ) + '\n'):  # an ftasei edo tote yparxei kapoio sfalma, leipei to sunolo
+            if result:  # an ftasei edo tote yparxei kapoio sfalma, leipei to sunolo
                 raise PARSEError("Error Total is missing in line : " + line)
                 
             #an ftasei edo, tote einai lanthasmeno proion
@@ -222,8 +236,13 @@ def parseProduct(inputFile):
         line = inputFile.readline().upper()
     #while end
 
+# sugkrinei duo float arithmous gia isotita
 def isEqual(x, y):
-    if abs(x - y) > max(abs(x), abs(y))* epsilon:
+    #if abs(x - y) > max(abs(x), abs(y))* epsilon:
+    error = 0.00001 
+
+    if abs(x - y) > max(abs(x), abs(y)) * error:
+        logging.info("x = %f y = %f", x, y)
         return False
     else:
         return True
@@ -231,7 +250,7 @@ def isEqual(x, y):
 def parseDelimiter(inputFile):
     line = inputFile.readline().upper()
 
-    pattern = '^-+\s*$'
+    pattern = '^-+$'
     result = re.match(pattern, line)
 
     if result: 
@@ -243,7 +262,7 @@ def productStats():
     logging.debug("Printing product Statistics")
 
     try:
-        productName = input("Enter product name : ")
+        productName = input("Enter product name : ").upper
     except EOFError:
         logging.debug("Empty product name")
     else:
