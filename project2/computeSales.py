@@ -28,8 +28,9 @@ class list_item:
     def __init__(self, productName, total):
         self.productName = productName
         self.total   = total
-logging.basicConfig(level=logging.INFO)
+#logging.basicConfig(level=logging.INFO)
 #logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.CRITICAL)
 
 msg = "Give your preference: (1: read new input file, 2: print statistics for a specific product, 3: print statistics for a specific AFM, 4: exit the program) "
 productDict = { }
@@ -65,9 +66,6 @@ def saveData(afm, productList, total):
 
     if  not afm in afmDict.keys():
         afmDict[afm] = {}
-        afm_exist = False
-    else:
-        afm_exist = True
 
     for product_name, product_total in productList.items() :
         if not product_name in productDict.keys():    #an den uparxei auto to proion sto lexiko
@@ -196,21 +194,17 @@ def parseProduct(inputFile):
 
             logging.debug('Product:%s Quantity:%s Price:%s Final:%s', product_name, quantity, price, total)
 
-            if isEqual(total, quantity * price):# an to proion einai sosto
+            if isEqual(total, quantity * price) and (quantity > 0) and (total > 0) :# an to proion einai sosto
                 productsNum += 1
                 products_total += total
-
-                #prosthiki sti lista
-                new_product = list_item(product_name, total)
 
                 if product_name in productList.keys(): # an uparxei to proion, enimerose tin timi tou
                     productList[product_name] += total
                 else:# an den uparxei prosthese to proion sto lexiko
                     productList[product_name] = total
-
-
             else:
                 logging.debug('Product numerical error. total != quantity * price in line %s', line)
+                raise PARSEError('Product numerical error. total != quantity * price in line %s', line)
     
         else:   # an den einai sosto proion
             #elegxos an eftase sto SUNOLO
@@ -226,7 +220,7 @@ def parseProduct(inputFile):
                 
                 logging.debug('Total : [%s]', total)
 
-                if (productsNum > 0) and isEqual(products_total, total): # an exei toulaxiston ena proion kai to sunolo einai sosto
+                if (productsNum > 0) and (total > 0) and isEqual(products_total, total): # an exei toulaxiston ena proion kai to sunolo einai sosto
                     logging.info("Parsed %d correct products, products total %f", productsNum, products_total)  
                     return productList, total # an ftasei edo tote i apodeixi einai sosti kai i sunartisi epistrefei
                 else:
@@ -326,10 +320,6 @@ if __name__ == '__main__':
             else:
                 logging.debug('Exiting')
                 break
-        
-        """ 
-        start_time = timeit.default_timer()
-        logging.info("Executed in %s seconds.", timeit.default_timer() - start_time) """
 
     kilobytes = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss # peak memory usage (bytes on OS X, kilobytes on Linux)
     megabytes = kilobytes / 1024
